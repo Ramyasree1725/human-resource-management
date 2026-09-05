@@ -79,3 +79,4 @@ class LeaveController {
 }
 
 module.exports = new LeaveController();
+// Feature: Leave Balances and Real-Time Attendance 
