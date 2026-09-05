@@ -79,3 +79,4 @@ class DepartmentController {
 }
 
 module.exports = new DepartmentController();
+// Feature: Department Units and Org Hierarchy Chart 
