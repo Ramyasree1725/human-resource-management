@@ -79,3 +79,4 @@ class EmployeeController {
 }
 
 module.exports = new EmployeeController();
+// Feature: Employee Directory and Profiles Module 
