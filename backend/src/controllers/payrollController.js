@@ -79,3 +79,4 @@ class PayrollController {
 }
 
 module.exports = new PayrollController();
+// Feature: Payroll Engine and PDF Payslip Generation 
