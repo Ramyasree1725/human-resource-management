@@ -1,0 +1,2167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StaffBase HRMS - Enterprise Portal</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & Babel Standalone -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    input, select, textarea, button {
+      font-family: inherit;
+    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+  </style>
+</head>
+<body class="bg-gray-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 h-screen w-screen overflow-hidden select-none">
+  <div id="root" class="h-full w-full"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useCallback } = React;
+
+    // ==================== REAL-TIME PROFESSIONAL SVG ICONS (NO EMOJIS) ====================
+    const Icons = {
+      Dashboard: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>,
+      Users: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>,
+      Calendar: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" /></svg>,
+      Clock: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+      Building: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" /></svg>,
+      Dollar: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+      MapPin: () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>,
+      Plus: () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>,
+      Search: () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>,
+      Download: () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>,
+      Print: () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5z" /></svg>,
+      Sun: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>,
+      Moon: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>,
+      Logout: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>,
+      CheckCircle: () => <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+      Briefcase: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" /></svg>
+    };
+
+    // ==================== METADATA & COMPREHENSIVE DATASET ====================
+    const DEPARTMENTS = [
+      { id: 'eng', name: 'Engineering', code: 'ENG', head: 'Vikram Sharma', location: 'Building A, Floor 3' },
+      { id: 'hr', name: 'Human Resources', code: 'HR', head: 'Priya Sundaram', location: 'Building B, Floor 2' },
+      { id: 'fin', name: 'Finance', code: 'FIN', head: 'Rajesh Nair', location: 'Building B, Floor 4' },
+      { id: 'sales', name: 'Sales & Revenue', code: 'SALES', head: 'Anil Kapoor', location: 'Building C, Floor 1' },
+      { id: 'mkt', name: 'Marketing', code: 'MKT', head: 'Deepa Verma', location: 'Building C, Floor 5' },
+      { id: 'prod', name: 'Product Management', code: 'PROD', head: 'Karthik Rao', location: 'Building A, Floor 2' },
+      { id: 'ops', name: 'Operations', code: 'OPS', head: 'Sunita Reddy', location: 'Building B, Floor 1' },
+      { id: 'cs', name: 'Customer Support', code: 'CS', head: 'Manoj Kumar', location: 'Building D, Floor 1' }
+    ];
+
+    const LOCATIONS = ['All Locations', 'Hyderabad', 'Bangalore', 'Mumbai', 'Pune', 'Delhi NCR', 'Chennai'];
+
+    const INITIAL_EMPLOYEES = [
+      { id: '1', employeeId: 'EMP-1001', firstName: 'Rahul', lastName: 'Sharma', email: 'rahul.sharma@company.com', phone: '+91 98450 11223', departmentId: 'eng', designation: 'Software Architect', status: 'Active', employmentType: 'Full-time', salary: 2800000, joiningDate: '2021-03-15', location: 'Bangalore' },
+      { id: '2', employeeId: 'EMP-1002', firstName: 'Ananya', lastName: 'Iyer', email: 'ananya.iyer@company.com', phone: '+91 97410 44556', departmentId: 'prod', designation: 'Product Manager', status: 'Active', employmentType: 'Full-time', salary: 2100000, joiningDate: '2020-07-10', location: 'Bangalore' },
+      { id: '3', employeeId: 'EMP-1003', firstName: 'Aditya', lastName: 'Verma', email: 'aditya.verma@company.com', phone: '+91 99880 77889', departmentId: 'hr', designation: 'HR Specialist', status: 'Active', employmentType: 'Full-time', salary: 1250000, joiningDate: '2022-01-20', location: 'Hyderabad' },
+      { id: '4', employeeId: 'EMP-1004', firstName: 'Sneha', lastName: 'Reddy', email: 'sneha.reddy@company.com', phone: '+91 98110 33445', departmentId: 'fin', designation: 'Senior Financial Analyst', status: 'Active', employmentType: 'Full-time', salary: 1450000, joiningDate: '2021-11-05', location: 'Hyderabad' },
+      { id: '5', employeeId: 'EMP-1005', firstName: 'Vikram', lastName: 'Patel', email: 'vikram.patel@company.com', phone: '+91 96550 88990', departmentId: 'sales', designation: 'Sales Director', status: 'Active', employmentType: 'Full-time', salary: 1950000, joiningDate: '2022-05-18', location: 'Mumbai' },
+      { id: '6', employeeId: 'EMP-1006', firstName: 'Pooja', lastName: 'Gupta', email: 'pooja.gupta@company.com', phone: '+91 91220 55667', departmentId: 'mkt', designation: 'Marketing Associate', status: 'Probation', employmentType: 'Full-time', salary: 900000, joiningDate: '2026-06-01', location: 'Delhi NCR' },
+      { id: '7', employeeId: 'EMP-1007', firstName: 'Manish', lastName: 'Deshmukh', email: 'manish.deshmukh@company.com', phone: '+91 94330 22114', departmentId: 'eng', designation: 'Frontend Engineer', status: 'Active', employmentType: 'Contract', salary: 1650000, joiningDate: '2023-09-12', location: 'Pune' },
+      { id: '8', employeeId: 'EMP-1008', firstName: 'Kavya', lastName: 'Nair', email: 'kavya.nair@company.com', phone: '+91 95660 77665', departmentId: 'eng', designation: 'QA Lead', status: 'On Leave', employmentType: 'Full-time', salary: 1550000, joiningDate: '2023-02-14', location: 'Bangalore' },
+      { id: '9', employeeId: 'EMP-1009', firstName: 'Rohan', lastName: 'Mehta', email: 'rohan.mehta@company.com', phone: '+91 93440 99881', departmentId: 'ops', designation: 'Operations Specialist', status: 'Active', employmentType: 'Full-time', salary: 1150000, joiningDate: '2024-01-10', location: 'Chennai' },
+      { id: '10', employeeId: 'EMP-1010', firstName: 'Deepika', lastName: 'Menon', email: 'deepika.menon@company.com', phone: '+91 98770 11992', departmentId: 'cs', designation: 'Support Representative', status: 'Active', employmentType: 'Full-time', salary: 850000, joiningDate: '2024-04-15', location: 'Hyderabad' },
+      { id: '11', employeeId: 'EMP-1011', firstName: 'Suresh', lastName: 'Konda', email: 'suresh.konda@company.com', phone: '+91 98480 33221', departmentId: 'eng', designation: 'Backend Developer', status: 'Active', employmentType: 'Full-time', salary: 1750000, joiningDate: '2023-05-10', location: 'Hyderabad' },
+      { id: '12', employeeId: 'EMP-1012', firstName: 'Haritha', lastName: 'Rao', email: 'haritha.rao@company.com', phone: '+91 98490 88776', departmentId: 'fin', designation: 'Tax Consultant', status: 'Contract', employmentType: 'Contract', salary: 1300000, joiningDate: '2023-10-01', location: 'Hyderabad' },
+      { id: '13', employeeId: 'EMP-1013', firstName: 'Kiran', lastName: 'Kumar', email: 'kiran.kumar@company.com', phone: '+91 91210 44332', departmentId: 'sales', designation: 'Enterprise SDR', status: 'Probation', employmentType: 'Full-time', salary: 950000, joiningDate: '2026-07-01', location: 'Hyderabad' },
+      { id: '14', employeeId: 'EMP-1014', firstName: 'Meera', lastName: 'Nambiar', email: 'meera.nambiar@company.com', phone: '+91 98860 11223', departmentId: 'prod', designation: 'UX Designer', status: 'Active', employmentType: 'Full-time', salary: 1400000, joiningDate: '2022-08-20', location: 'Bangalore' },
+      { id: '15', employeeId: 'EMP-1015', firstName: 'Prateek', lastName: 'Jain', email: 'prateek.jain@company.com', phone: '+91 99300 55443', departmentId: 'mkt', designation: 'SEO & Content Strategist', status: 'Active', employmentType: 'Intern', salary: 400000, joiningDate: '2026-05-15', location: 'Mumbai' },
+      { id: '16', employeeId: 'EMP-1016', firstName: 'Divya', lastName: 'Pawar', email: 'divya.pawar@company.com', phone: '+91 97654 32109', departmentId: 'ops', designation: 'Facilities Lead', status: 'Probation', employmentType: 'Contract', salary: 950000, joiningDate: '2026-06-15', location: 'Pune' },
+      { id: '17', employeeId: 'EMP-1017', firstName: 'Arjun', lastName: 'Singh', email: 'arjun.singh@company.com', phone: '+91 98123 45678', departmentId: 'cs', designation: 'Technical Support Lead', status: 'Active', employmentType: 'Full-time', salary: 1100000, joiningDate: '2023-11-01', location: 'Delhi NCR' },
+      { id: '18', employeeId: 'EMP-1018', firstName: 'Neha', lastName: 'Kulkarni', email: 'neha.kulkarni@company.com', phone: '+91 98234 56789', departmentId: 'hr', designation: 'Talent Acquisition Partner', status: 'On Leave', employmentType: 'Full-time', salary: 1200000, joiningDate: '2022-03-01', location: 'Pune' },
+      { id: '19', employeeId: 'EMP-1019', firstName: 'Siddharth', lastName: 'Iyengar', email: 'siddharth.iyengar@company.com', phone: '+91 98401 23456', departmentId: 'fin', designation: 'FP&A Manager', status: 'Active', employmentType: 'Full-time', salary: 2200000, joiningDate: '2021-08-15', location: 'Chennai' },
+      { id: '20', employeeId: 'EMP-1020', firstName: 'Varun', lastName: 'Chauhan', email: 'varun.chauhan@company.com', phone: '+91 98111 22334', departmentId: 'sales', designation: 'Inside Sales Executive', status: 'Active', employmentType: 'Intern', salary: 450000, joiningDate: '2026-04-01', location: 'Delhi NCR' },
+      { id: '21', employeeId: 'EMP-1021', firstName: 'Aarav', lastName: 'Bhatia', email: 'aarav.bhatia@company.com', phone: '+91 98765 12340', departmentId: 'eng', designation: 'Cloud DevOps Engineer', status: 'Active', employmentType: 'Full-time', salary: 1900000, joiningDate: '2022-09-10', location: 'Hyderabad' },
+      { id: '22', employeeId: 'EMP-1022', firstName: 'Diya', lastName: 'Kapoor', email: 'diya.kapoor@company.com', phone: '+91 97654 87654', departmentId: 'hr', designation: 'Employee Experience Lead', status: 'Active', employmentType: 'Full-time', salary: 1350000, joiningDate: '2023-01-15', location: 'Bangalore' },
+      { id: '23', employeeId: 'EMP-1023', firstName: 'Vivaan', lastName: 'Chopra', email: 'vivaan.chopra@company.com', phone: '+91 99123 45670', departmentId: 'prod', designation: 'Principal Product Owner', status: 'Active', employmentType: 'Full-time', salary: 2400000, joiningDate: '2021-04-12', location: 'Mumbai' },
+      { id: '24', employeeId: 'EMP-1024', firstName: 'Isha', lastName: 'Pillai', email: 'isha.pillai@company.com', phone: '+91 98451 23456', departmentId: 'mkt', designation: 'Performance Marketing Lead', status: 'Active', employmentType: 'Full-time', salary: 1550000, joiningDate: '2022-11-20', location: 'Chennai' },
+      { id: '25', employeeId: 'EMP-1025', firstName: 'Kabir', lastName: 'Rathore', email: 'kabir.rathore@company.com', phone: '+91 98220 11223', departmentId: 'sales', designation: 'Strategic Account Director', status: 'Active', employmentType: 'Full-time', salary: 2100000, joiningDate: '2021-06-05', location: 'Delhi NCR' },
+      { id: '26', employeeId: 'EMP-1026', firstName: 'Saanvi', lastName: 'Mukherjee', email: 'saanvi.mukherjee@company.com', phone: '+91 97330 44556', departmentId: 'fin', designation: 'Corporate Controller', status: 'Active', employmentType: 'Full-time', salary: 2050000, joiningDate: '2020-10-18', location: 'Hyderabad' },
+      { id: '27', employeeId: 'EMP-1027', firstName: 'Shaurya', lastName: 'Banerjee', email: 'shaurya.banerjee@company.com', phone: '+91 98310 99887', departmentId: 'eng', designation: 'Security & Compliance Engineer', status: 'Active', employmentType: 'Full-time', salary: 1850000, joiningDate: '2023-04-01', location: 'Pune' },
+      { id: '28', employeeId: 'EMP-1028', firstName: 'Riya', lastName: 'Chatterjee', email: 'riya.chatterjee@company.com', phone: '+91 98300 33445', departmentId: 'cs', designation: 'Customer Escalations Manager', status: 'Active', employmentType: 'Full-time', salary: 1250000, joiningDate: '2022-07-25', location: 'Bangalore' },
+      { id: '29', employeeId: 'EMP-1029', firstName: 'Advik', lastName: 'Joshi', email: 'advik.joshi@company.com', phone: '+91 97660 55667', departmentId: 'ops', designation: 'Supply Chain Specialist', status: 'Active', employmentType: 'Full-time', salary: 1300000, joiningDate: '2024-02-15', location: 'Mumbai' },
+      { id: '30', employeeId: 'EMP-1030', firstName: 'Tanvi', lastName: 'Patil', email: 'tanvi.patil@company.com', phone: '+91 98200 66778', departmentId: 'hr', designation: 'Compensation Analyst', status: 'Active', employmentType: 'Full-time', salary: 1100000, joiningDate: '2023-08-10', location: 'Pune' },
+      { id: '31', employeeId: 'EMP-1031', firstName: 'Rudra', lastName: 'Yadav', email: 'rudra.yadav@company.com', phone: '+91 98100 77889', departmentId: 'eng', designation: 'Full Stack Engineer', status: 'Probation', employmentType: 'Full-time', salary: 1450000, joiningDate: '2026-05-01', location: 'Delhi NCR' },
+      { id: '32', employeeId: 'EMP-1032', firstName: 'Anika', lastName: 'Kaur', email: 'anika.kaur@company.com', phone: '+91 98720 88990', departmentId: 'prod', designation: 'User Researcher', status: 'Active', employmentType: 'Contract', salary: 1350000, joiningDate: '2023-12-01', location: 'Bangalore' },
+      { id: '33', employeeId: 'EMP-1033', firstName: 'Pranav', lastName: 'Ghosh', email: 'pranav.ghosh@company.com', phone: '+91 98360 11223', departmentId: 'mkt', designation: 'Content Producer', status: 'Active', employmentType: 'Full-time', salary: 980000, joiningDate: '2024-03-10', location: 'Hyderabad' },
+      { id: '34', employeeId: 'EMP-1034', firstName: 'Khushi', lastName: 'Malhotra', email: 'khushi.malhotra@company.com', phone: '+91 98180 22334', departmentId: 'sales', designation: 'Regional Sales Manager', status: 'Active', employmentType: 'Full-time', salary: 1750000, joiningDate: '2022-04-18', location: 'Delhi NCR' },
+      { id: '35', employeeId: 'EMP-1035', firstName: 'Atharv', lastName: 'Deshmukh', email: 'atharv.deshmukh@company.com', phone: '+91 98221 33445', departmentId: 'ops', designation: 'Logistics Coordinator', status: 'Active', employmentType: 'Full-time', salary: 920000, joiningDate: '2024-05-20', location: 'Pune' },
+      { id: '36', employeeId: 'EMP-1036', firstName: 'Avani', lastName: 'Reddy', email: 'avani.reddy@company.com', phone: '+91 98481 44556', departmentId: 'fin', designation: 'Audit Associate', status: 'Probation', employmentType: 'Full-time', salary: 880000, joiningDate: '2026-06-10', location: 'Hyderabad' },
+      { id: '37', employeeId: 'EMP-1037', firstName: 'Advaith', lastName: 'Nair', email: 'advaith.nair@company.com', phone: '+91 94470 55667', departmentId: 'cs', designation: 'Technical Support Engineer', status: 'Active', employmentType: 'Full-time', salary: 950000, joiningDate: '2023-09-01', location: 'Chennai' },
+      { id: '38', employeeId: 'EMP-1038', firstName: 'Mira', lastName: 'Patel', email: 'mira.patel@company.com', phone: '+91 98250 66778', departmentId: 'eng', designation: 'Mobile App Developer (Flutter)', status: 'Active', employmentType: 'Full-time', salary: 1600000, joiningDate: '2022-10-15', location: 'Mumbai' },
+      { id: '39', employeeId: 'EMP-1039', firstName: 'Reyansh', lastName: 'Verma', email: 'reyansh.verma@company.com', phone: '+91 99881 77889', departmentId: 'hr', designation: 'HR Operations Associate', status: 'Active', employmentType: 'Intern', salary: 420000, joiningDate: '2026-03-01', location: 'Hyderabad' },
+      { id: '40', employeeId: 'EMP-1040', firstName: 'Prisha', lastName: 'Sharma', email: 'prisha.sharma@company.com', phone: '+91 98452 88990', departmentId: 'prod', designation: 'Product Analyst', status: 'Active', employmentType: 'Full-time', salary: 1200000, joiningDate: '2024-01-22', location: 'Bangalore' }
+    ];
+
+    const INITIAL_LEAVES = [
+      { id: 'lv_1', leaveId: 'LV-501', employeeName: 'Kavya Nair', employeeId: 'EMP-1008', leaveType: 'Annual Leave', startDate: '2026-08-28', endDate: '2026-09-04', days: 7, reason: 'Family vacation', status: 'Approved' },
+      { id: 'lv_2', leaveId: 'LV-502', employeeName: 'Pooja Gupta', employeeId: 'EMP-1006', leaveType: 'Casual Leave', startDate: '2026-09-02', endDate: '2026-09-03', days: 2, reason: 'Personal work', status: 'Pending' },
+      { id: 'lv_3', leaveId: 'LV-503', employeeName: 'Manish Deshmukh', employeeId: 'EMP-1007', leaveType: 'Sick Leave', startDate: '2026-09-05', endDate: '2026-09-06', days: 2, reason: 'Medical appointment', status: 'Pending' }
+    ];
+
+    const INITIAL_ATTENDANCE = [
+      { id: 'att_1', employeeId: 'EMP-1001', name: 'Rahul Sharma', date: '2026-09-02', status: 'Present', inTime: '09:12 AM', outTime: '06:15 PM', hours: 8.5, mode: 'Office' },
+      { id: 'att_2', employeeId: 'EMP-1002', name: 'Ananya Iyer', date: '2026-09-02', status: 'Present', inTime: '09:25 AM', outTime: '06:30 PM', hours: 8.5, mode: 'Office' },
+      { id: 'att_3', employeeId: 'EMP-1003', name: 'Aditya Verma', date: '2026-09-02', status: 'Remote', inTime: '09:00 AM', outTime: '05:30 PM', hours: 8.0, mode: 'WFH' },
+      { id: 'att_8', employeeId: 'EMP-1008', name: 'Kavya Nair', date: '2026-09-02', status: 'On Leave', inTime: '--', outTime: '--', hours: 0, mode: '--' }
+    ];
+
+    const INITIAL_WORK_REPORTS = [
+      {
+        id: 'wr_1',
+        employeeId: 'EMP-1001',
+        employeeName: 'Rahul Sharma',
+        departmentId: 'dept_eng',
+        designation: 'Principal Architect',
+        date: '2026-09-02',
+        slot: 'MORNING_TO_AFTERNOON',
+        slotLabel: 'Morning to Afternoon (First Half)',
+        timeWindow: '09:30 AM - 01:30 PM',
+        taskTitle: 'Core Sprint Feature Implementation & Unit Testing',
+        taskDescription: 'Completed morning implementation of the multi-factor authentication service and ran integration test suites.',
+        deliverables: 'PR #412 created on GitHub, documentation updated.',
+        hoursSpent: 4.0,
+        status: 'Completed',
+        blockers: 'None',
+        submittedAt: '2026-09-02T13:30:00Z',
+        managerReview: { status: 'Reviewed', feedback: 'Great velocity! Proceed with staging deployment.', reviewedBy: 'Office Head' }
+      },
+      {
+        id: 'wr_2',
+        employeeId: 'EMP-1002',
+        employeeName: 'Ananya Iyer',
+        departmentId: 'dept_eng',
+        designation: 'Staff Backend Engineer',
+        date: '2026-09-02',
+        slot: 'MORNING_TO_AFTERNOON',
+        slotLabel: 'Morning to Afternoon (First Half)',
+        timeWindow: '09:30 AM - 01:30 PM',
+        taskTitle: 'Database Query Optimization & Indexing',
+        taskDescription: 'Analyzed slow query logs for payroll generation. Added compound index on employee_id and fiscal_year.',
+        deliverables: 'Reduced execution latency by 45%. Migration script verified.',
+        hoursSpent: 4.0,
+        status: 'Completed',
+        blockers: 'None',
+        submittedAt: '2026-09-02T13:40:00Z',
+        managerReview: { status: 'Pending', feedback: '', reviewedBy: '' }
+      },
+      {
+        id: 'wr_3',
+        employeeId: 'EMP-1001',
+        employeeName: 'Rahul Sharma',
+        departmentId: 'dept_eng',
+        designation: 'Principal Architect',
+        date: '2026-09-02',
+        slot: 'AFTERNOON_TO_EOD',
+        slotLabel: 'Afternoon to Evening / EOD (Second Half)',
+        timeWindow: '02:00 PM - 06:30 PM',
+        taskTitle: 'Load Testing & End of Day Handover',
+        taskDescription: 'Conducted simulated 10k RPS benchmark on production staging cluster. Verified failover failover replication.',
+        deliverables: 'Load test report PDF uploaded to team drive.',
+        hoursSpent: 4.5,
+        status: 'Completed',
+        blockers: 'None',
+        submittedAt: '2026-09-02T18:30:00Z',
+        managerReview: { status: 'Pending', feedback: '', reviewedBy: '' }
+      }
+    ];
+
+    const formatCurrency = (amount) => '₹' + Number(amount || 0).toLocaleString('en-IN');
+
+    // ==================== ROOT APPLICATION ====================
+    function App() {
+      // Auth State
+      const [currentUser, setCurrentUser] = useState(() => {
+        const saved = localStorage.getItem('sb_auth_user_v4');
+        return saved ? JSON.parse(saved) : null;
+      });
+
+      const [authMode, setAuthMode] = useState('login');
+      const [authRole, setAuthRole] = useState('head');
+      const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme_dark') === 'true');
+      const [activeTab, setActiveTab] = useState('dashboard');
+
+      // Application Data State
+      const [employees, setEmployees] = useState(() => {
+        const saved = localStorage.getItem('sb_emp_data_v5');
+        return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
+      });
+
+      const [leaves, setLeaves] = useState(() => {
+        const saved = localStorage.getItem('sb_leave_data_v4');
+        return saved ? JSON.parse(saved) : INITIAL_LEAVES;
+      });
+
+      const [attendance, setAttendance] = useState(() => {
+        const saved = localStorage.getItem('sb_att_data_v4');
+        return saved ? JSON.parse(saved) : INITIAL_ATTENDANCE;
+      });
+
+      const [workReports, setWorkReports] = useState(() => {
+        const saved = localStorage.getItem('sb_work_reports_v5');
+        return saved ? JSON.parse(saved) : INITIAL_WORK_REPORTS;
+      });
+
+      // FILTER STATES
+      const [search, setSearch] = useState('');
+      const [filterDept, setFilterDept] = useState('ALL');
+      const [filterStatus, setFilterStatus] = useState('ALL');
+      const [filterType, setFilterType] = useState('ALL');
+      const [filterLocation, setFilterLocation] = useState('ALL');
+      const [sortBy, setSortBy] = useState('name');
+      const [selectedAttDate, setSelectedAttDate] = useState(() => new Date().toISOString().split('T')[0]);
+      const [leaveTabFilter, setLeaveTabFilter] = useState('Pending');
+      const [workDateFilter, setWorkDateFilter] = useState(() => new Date().toISOString().split('T')[0]);
+      const [workSlotFilter, setWorkSlotFilter] = useState('ALL');
+
+      // Modals
+      const [showEmpModal, setShowEmpModal] = useState(false);
+      const [editingEmp, setEditingEmp] = useState(null);
+      const [viewingEmp, setViewingEmp] = useState(null);
+      const [showLeaveModal, setShowLeaveModal] = useState(false);
+      const [showWorkModal, setShowWorkModal] = useState(false);
+      const [reviewingWorkReport, setReviewingWorkReport] = useState(null);
+      const [viewingPayslip, setViewingPayslip] = useState(null);
+
+      // Toast Feedback
+      const [toast, setToast] = useState(null);
+      const notify = (msg, type = 'success') => {
+        setToast({ msg, type });
+        setTimeout(() => setToast(null), 3000);
+      };
+
+      useEffect(() => {
+        if (darkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        localStorage.setItem('theme_dark', darkMode);
+      }, [darkMode]);
+
+      useEffect(() => {
+        if (currentUser) {
+          localStorage.setItem('sb_auth_user_v4', JSON.stringify(currentUser));
+        } else {
+          localStorage.removeItem('sb_auth_user_v4');
+        }
+      }, [currentUser]);
+
+      useEffect(() => { localStorage.setItem('sb_emp_data_v4', JSON.stringify(employees)); }, [employees]);
+      useEffect(() => { localStorage.setItem('sb_leave_data_v4', JSON.stringify(leaves)); }, [leaves]);
+      useEffect(() => { localStorage.setItem('sb_att_data_v4', JSON.stringify(attendance)); }, [attendance]);
+      useEffect(() => { localStorage.setItem('sb_work_reports_v5', JSON.stringify(workReports)); }, [workReports]);
+
+      // Login Handler
+      const handleLogin = (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const email = fd.get('email');
+
+        if (authRole === 'head') {
+          const headUser = {
+            id: 'head_admin',
+            name: 'Dr. Vikram Sharma',
+            email: email || 'head@company.com',
+            role: 'head',
+            roleName: 'Office Head & Director',
+            department: 'Executive Management'
+          };
+          setCurrentUser(headUser);
+          setActiveTab('dashboard');
+          notify(`Welcome back, ${headUser.name} (Office Head)`);
+        } else {
+          const matchedEmp = employees.find(emp => emp.email.toLowerCase() === (email || '').toLowerCase()) || employees[0];
+          const empUser = {
+            id: matchedEmp.id,
+            employeeId: matchedEmp.employeeId,
+            name: `${matchedEmp.firstName} ${matchedEmp.lastName}`,
+            email: matchedEmp.email,
+            role: 'employee',
+            roleName: matchedEmp.designation,
+            departmentId: matchedEmp.departmentId,
+            salary: matchedEmp.salary,
+            joiningDate: matchedEmp.joiningDate,
+            location: matchedEmp.location
+          };
+          setCurrentUser(empUser);
+          setActiveTab('emp_profile');
+          notify(`Welcome back, ${empUser.name}!`);
+        }
+      };
+
+      // Registration Handler
+      const handleRegister = (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const name = fd.get('name');
+        const email = fd.get('email');
+        const deptId = fd.get('departmentId');
+        const designation = fd.get('designation');
+        const location = fd.get('location') || 'Hyderabad';
+        const employmentType = fd.get('employmentType') || 'Full-time';
+
+        if (authRole === 'head') {
+          const newHead = {
+            id: 'head_' + Date.now(),
+            name,
+            email,
+            role: 'head',
+            roleName: 'Office Head (Admin)',
+            department: DEPARTMENTS.find(d => d.id === deptId)?.name || 'Management',
+            location
+          };
+          setCurrentUser(newHead);
+          setActiveTab('dashboard');
+          notify(`Office Head registration successful! Welcome, ${name}`);
+        } else {
+          const newEmpId = `EMP-${1000 + employees.length + 1}`;
+          const names = name.split(' ');
+          const newEmp = {
+            id: 'emp_' + Date.now(),
+            employeeId: newEmpId,
+            firstName: names[0] || 'Employee',
+            lastName: names.slice(1).join(' ') || 'Staff',
+            email,
+            phone: '+91 98765 43210',
+            departmentId: deptId || 'eng',
+            designation: designation || 'Software Engineer',
+            status: 'Active',
+            employmentType,
+            salary: 1200000,
+            joiningDate: new Date().toISOString().split('T')[0],
+            location
+          };
+
+          setEmployees(prev => [newEmp, ...prev]);
+
+          const empUser = {
+            id: newEmp.id,
+            employeeId: newEmp.employeeId,
+            name: `${newEmp.firstName} ${newEmp.lastName}`,
+            email: newEmp.email,
+            role: 'employee',
+            roleName: newEmp.designation,
+            departmentId: newEmp.departmentId,
+            salary: newEmp.salary,
+            joiningDate: newEmp.joiningDate,
+            location: newEmp.location
+          };
+          setCurrentUser(empUser);
+          setActiveTab('emp_profile');
+          notify(`Employee registered! Assigned ID: ${newEmpId}`);
+        }
+      };
+
+      // Fast Demo Logins
+      const quickLoginAsHead = () => {
+        const headUser = {
+          id: 'head_admin',
+          name: 'Dr. Vikram Sharma',
+          email: 'head@company.com',
+          role: 'head',
+          roleName: 'Office Head & Director',
+          department: 'Executive Management'
+        };
+        setCurrentUser(headUser);
+        setActiveTab('dashboard');
+        notify('Logged in as Office Head');
+      };
+
+      const quickLoginAsEmployee = (empIndex = 0) => {
+        const emp = employees[empIndex] || employees[0];
+        const empUser = {
+          id: emp.id,
+          employeeId: emp.employeeId,
+          name: `${emp.firstName} ${emp.lastName}`,
+          email: emp.email,
+          role: 'employee',
+          roleName: emp.designation,
+          departmentId: emp.departmentId,
+          salary: emp.salary,
+          joiningDate: emp.joiningDate,
+          location: emp.location
+        };
+        setCurrentUser(empUser);
+        setActiveTab('emp_profile');
+        notify(`Logged in as Employee: ${empUser.name}`);
+      };
+
+      const handleLogout = () => {
+        setCurrentUser(null);
+        notify('Logged out successfully');
+      };
+
+      // Computed Metrics
+      const totalCount = employees.length;
+      const activeCount = employees.filter(e => e.status === 'Active').length;
+      const onLeaveCount = employees.filter(e => e.status === 'On Leave').length;
+      const pendingLeaveCount = leaves.filter(l => l.status === 'Pending').length;
+      const totalMonthlyPayroll = employees.reduce((sum, e) => sum + Math.round((e.salary || 0) / 12), 0);
+
+      // ==================== REAL-TIME MULTI-FILTER ENGINE ====================
+      const filteredEmployees = useMemo(() => {
+        let list = employees.filter(e => {
+          // 1. Search Query Match
+          const query = search.toLowerCase().trim();
+          const matchQuery = !query || 
+            `${e.firstName} ${e.lastName}`.toLowerCase().includes(query) ||
+            (e.email || '').toLowerCase().includes(query) ||
+            (e.employeeId || '').toLowerCase().includes(query) ||
+            (e.designation || '').toLowerCase().includes(query) ||
+            (e.location || '').toLowerCase().includes(query);
+
+          // 2. Department Filter Match
+          const matchDept = filterDept === 'ALL' || e.departmentId === filterDept;
+
+          // 3. Status Filter Match (Active, Probation, On Leave)
+          const matchStatus = filterStatus === 'ALL' || e.status === filterStatus;
+
+          // 4. Employment Type Filter Match (Full-time, Contract, Intern)
+          const matchType = filterType === 'ALL' || e.employmentType === filterType;
+
+          // 5. Location Filter Match (Hyderabad, Bangalore, Mumbai, Pune, Delhi NCR, Chennai)
+          const matchLocation = filterLocation === 'ALL' || (e.location || '').toLowerCase().includes(filterLocation.toLowerCase());
+
+          return matchQuery && matchDept && matchStatus && matchType && matchLocation;
+        });
+
+        // Sorting
+        if (sortBy === 'name') {
+          list.sort((a, b) => a.firstName.localeCompare(b.firstName));
+        } else if (sortBy === 'salary_desc') {
+          list.sort((a, b) => b.salary - a.salary);
+        } else if (sortBy === 'salary_asc') {
+          list.sort((a, b) => a.salary - b.salary);
+        } else if (sortBy === 'id') {
+          list.sort((a, b) => a.employeeId.localeCompare(b.employeeId));
+        }
+
+        return list;
+      }, [employees, search, filterDept, filterStatus, filterType, filterLocation, sortBy]);
+
+      // Employee CRUD
+      const handleSaveEmployee = (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const data = {
+          firstName: fd.get('firstName'),
+          lastName: fd.get('lastName'),
+          email: fd.get('email'),
+          phone: fd.get('phone'),
+          departmentId: fd.get('departmentId'),
+          designation: fd.get('designation'),
+          salary: Number(fd.get('salary')),
+          status: fd.get('status'),
+          employmentType: fd.get('employmentType'),
+          location: fd.get('location'),
+          joiningDate: fd.get('joiningDate') || new Date().toISOString().split('T')[0]
+        };
+
+        if (editingEmp) {
+          setEmployees(prev => prev.map(emp => emp.id === editingEmp.id ? { ...emp, ...data } : emp));
+          notify(`Updated employee ${data.firstName} ${data.lastName}`);
+        } else {
+          const newEmp = { id: 'emp_' + Date.now(), employeeId: `EMP-${1000 + employees.length + 1}`, ...data };
+          setEmployees(prev => [newEmp, ...prev]);
+          notify(`Added employee ${data.firstName} ${data.lastName}`);
+        }
+        setShowEmpModal(false);
+        setEditingEmp(null);
+      };
+
+      const handleDeleteEmployee = (id, name) => {
+        if (confirm(`Remove ${name} from employee directory?`)) {
+          setEmployees(prev => prev.filter(e => e.id !== id));
+          notify(`Deleted employee ${name}`, 'warning');
+        }
+      };
+
+      const handleApplyLeave = (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const newLeave = {
+          id: 'lv_' + Date.now(),
+          leaveId: `LV-${500 + leaves.length + 1}`,
+          employeeName: currentUser.role === 'employee' ? currentUser.name : fd.get('employeeName'),
+          employeeId: currentUser.role === 'employee' ? currentUser.employeeId : 'EMP-1001',
+          leaveType: fd.get('leaveType'),
+          startDate: fd.get('startDate'),
+          endDate: fd.get('endDate'),
+          days: Number(fd.get('days')) || 1,
+          reason: fd.get('reason'),
+          status: 'Pending'
+        };
+        setLeaves(prev => [newLeave, ...prev]);
+        setShowLeaveModal(false);
+        notify('Leave request submitted for approval');
+      };
+
+      const handleLeaveAction = (id, status) => {
+        setLeaves(prev => prev.map(l => l.id === id ? { ...l, status } : l));
+        notify(`Leave request ${status.toLowerCase()}`, status === 'Approved' ? 'success' : 'warning');
+      };
+
+      const handlePunchAction = (status = 'Present') => {
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const empId = currentUser.role === 'employee' ? currentUser.employeeId : 'EMP-1001';
+        const empName = currentUser.role === 'employee' ? currentUser.name : 'Rahul Sharma';
+        
+        const record = {
+          id: 'att_' + Date.now(),
+          employeeId: empId,
+          name: empName,
+          date: new Date().toISOString().split('T')[0],
+          status,
+          inTime: now,
+          outTime: 'In progress',
+          hours: 8.5,
+          mode: status === 'Remote' ? 'WFH' : 'Office'
+        };
+        setAttendance(prev => [record, ...prev.filter(a => a.employeeId !== empId)]);
+        notify(`Attendance clocked as ${status} at ${now}`);
+      };
+
+      const handleUploadWork = (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const slot = fd.get('slot') || 'MORNING_TO_AFTERNOON';
+        const isMorning = slot === 'MORNING_TO_AFTERNOON';
+
+        let empName = currentUser.name;
+        let empId = currentUser.employeeId;
+        let deptId = currentUser.departmentId || 'dept_eng';
+        let designation = currentUser.roleName || 'Specialist';
+
+        if (currentUser.role === 'head') {
+          const selectedEmpId = fd.get('employeeId') || 'EMP-1001';
+          const found = employees.find(emp => emp.employeeId === selectedEmpId);
+          if (found) {
+            empName = `${found.firstName} ${found.lastName}`;
+            empId = found.employeeId;
+            deptId = found.departmentId;
+            designation = found.designation;
+          }
+        }
+
+        const newReport = {
+          id: 'wr_' + Date.now(),
+          employeeId: empId,
+          employeeName: empName,
+          departmentId: deptId,
+          designation: designation,
+          date: fd.get('date') || new Date().toISOString().split('T')[0],
+          slot,
+          slotLabel: isMorning ? 'Morning to Afternoon (First Half)' : 'Afternoon to Evening / EOD (Second Half)',
+          timeWindow: isMorning ? '09:30 AM - 01:30 PM' : '02:00 PM - 06:30 PM',
+          taskTitle: fd.get('taskTitle') || 'Daily Task Update',
+          taskDescription: fd.get('taskDescription') || '',
+          deliverables: fd.get('deliverables') || '',
+          hoursSpent: Number(fd.get('hoursSpent')) || (isMorning ? 4.0 : 4.5),
+          status: fd.get('status') || 'Completed',
+          blockers: fd.get('blockers') || 'None',
+          submittedAt: new Date().toISOString(),
+          managerReview: { status: 'Pending', feedback: '', reviewedBy: '' }
+        };
+
+        setWorkReports(prev => [newReport, ...prev]);
+        setShowWorkModal(false);
+        notify('Daily work report uploaded and sent to Office Head!');
+      };
+
+      const handleReviewWork = (id, feedback = '') => {
+        setWorkReports(prev => prev.map(r => r.id === id ? {
+          ...r,
+          managerReview: {
+            status: 'Reviewed',
+            feedback: feedback || 'Acknowledged and reviewed by Office Head.',
+            reviewedBy: 'Dr. Vikram Sharma (Head)'
+          }
+        } : r));
+        setReviewingWorkReport(null);
+        notify('Work report reviewed and feedback sent to employee!');
+      };
+
+      // Export CSV
+      const handleExportCSV = () => {
+        const headers = ['Employee ID', 'Name', 'Email', 'Phone', 'Department', 'Role', 'Status', 'Employment Type', 'Salary', 'Location'];
+        const rows = filteredEmployees.map(e => [
+          e.employeeId,
+          `"${e.firstName} ${e.lastName}"`,
+          e.email,
+          `"${e.phone}"`,
+          DEPARTMENTS.find(d => d.id === e.departmentId)?.name || e.departmentId,
+          `"${e.designation}"`,
+          e.status,
+          e.employmentType,
+          e.salary,
+          `"${e.location}"`
+        ]);
+        const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `employees_${filterDept}_${filterStatus}_${filterLocation}.csv`);
+        link.click();
+        notify(`Exported ${filteredEmployees.length} employee records to CSV`);
+      };
+
+      // ==================== 1. AUTHENTICATION SCREENS ====================
+      if (!currentUser) {
+        return (
+          <div className="min-h-screen w-screen bg-slate-100 dark:bg-slate-950 flex flex-col justify-center items-center p-4">
+            <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg p-6 space-y-5 text-left">
+              
+              <div className="text-center space-y-1">
+                <div className="w-10 h-10 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 flex items-center justify-center font-bold text-sm mx-auto">
+                  SB
+                </div>
+                <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight m-0">StaffBase Portal</h1>
+                <p className="text-xs text-slate-500 dark:text-slate-400 m-0">Select your access portal below</p>
+              </div>
+
+              {/* Role Selector Tabs (Office Head vs Employee) */}
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setAuthRole('head')}
+                  className={`flex-1 py-2 rounded-md transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+                    authRole === 'head' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Icons.Building />
+                  <span>Office Head (Admin)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuthRole('employee')}
+                  className={`flex-1 py-2 rounded-md transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+                    authRole === 'employee' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Icons.Users />
+                  <span>Employee Portal</span>
+                </button>
+              </div>
+
+              {/* Mode Toggle */}
+              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 m-0">
+                  {authMode === 'login' ? `${authRole === 'head' ? 'Office Head' : 'Employee'} Login` : `Register New ${authRole === 'head' ? 'Office Head' : 'Employee'}`}
+                </h2>
+
+                <button
+                  type="button"
+                  onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium cursor-pointer"
+                >
+                  {authMode === 'login' ? 'Create new account' : 'Existing user? Login'}
+                </button>
+              </div>
+
+              {/* Form Body */}
+              {authMode === 'login' ? (
+                <form onSubmit={handleLogin} className="space-y-3 text-xs">
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
+                      {authRole === 'head' ? 'Office Head Work Email' : 'Employee Work Email'}
+                    </label>
+                    <input
+                      name="email"
+                      type="email"
+                      required
+                      placeholder={authRole === 'head' ? 'head@company.com' : 'rahul.sharma@company.com'}
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:bg-white dark:focus:bg-slate-900 focus:outline-none text-slate-900 dark:text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Password</label>
+                    <input
+                      name="password"
+                      type="password"
+                      required
+                      defaultValue="password123"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:bg-white dark:focus:bg-slate-900 focus:outline-none text-slate-900 dark:text-white"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold rounded-md transition-colors cursor-pointer shadow-xs mt-2"
+                  >
+                    Login as {authRole === 'head' ? 'Office Head' : 'Employee'}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleRegister} className="space-y-3 text-xs">
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Full Name *</label>
+                    <input name="name" required placeholder="e.g. Suresh Konda" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-white" />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Work Email *</label>
+                    <input name="email" type="email" required placeholder="name@company.com" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-white" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Department</label>
+                      <select name="departmentId" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-white">
+                        {DEPARTMENTS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Work Location</label>
+                      <select name="location" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-white">
+                        <option value="Hyderabad">Hyderabad</option>
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Pune">Pune</option>
+                        <option value="Delhi NCR">Delhi NCR</option>
+                        <option value="Chennai">Chennai</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Job Role</label>
+                      <input name="designation" defaultValue={authRole === 'head' ? 'Director' : 'Software Engineer'} required className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-white" />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Employment Type</label>
+                      <select name="employmentType" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-white">
+                        <option value="Full-time">Full-time</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Intern">Intern</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Password</label>
+                    <input name="password" type="password" required defaultValue="password123" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-white" />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold rounded-md transition-colors cursor-pointer shadow-xs mt-2"
+                  >
+                    Register {authRole === 'head' ? 'Office Head' : 'Employee'}
+                  </button>
+                </form>
+              )}
+
+              {/* Fast 1-Click Demo Buttons */}
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 text-center">
+                <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">1-Click Fast Demo Login:</p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={quickLoginAsHead}
+                    className="flex-1 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-[11px] font-medium text-slate-800 dark:text-slate-200 cursor-pointer flex items-center justify-center gap-1"
+                  >
+                    <Icons.Building />
+                    <span>Office Head</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => quickLoginAsEmployee(0)}
+                    className="flex-1 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-[11px] font-medium text-slate-800 dark:text-slate-200 cursor-pointer flex items-center justify-center gap-1"
+                  >
+                    <Icons.Users />
+                    <span>Employee</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        );
+      }
+
+      // ==================== 2. MAIN LOGGED-IN APPLICATION ====================
+      const isHead = currentUser.role === 'head';
+
+      return (
+        <div className="flex h-screen w-screen bg-slate-100 dark:bg-slate-950 overflow-hidden text-left text-slate-800 dark:text-slate-100">
+          
+          {/* Toast Notification */}
+          {toast && (
+            <div className={`fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-lg shadow-xl text-xs font-medium text-white flex items-center gap-2 border border-black/10 ${
+              toast.type === 'warning' ? 'bg-amber-600' : 'bg-slate-900 dark:bg-slate-100 dark:text-slate-900'
+            }`}>
+              <Icons.CheckCircle />
+              <span>{toast.msg}</span>
+            </div>
+          )}
+
+          {/* ==================== LEFT SIDEBAR ==================== */}
+          <aside className="w-56 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0">
+            {/* Brand Header */}
+            <div className="h-14 px-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 flex items-center justify-center font-bold text-xs">
+                  SB
+                </div>
+                <div>
+                  <h1 className="font-semibold text-xs tracking-tight text-slate-900 dark:text-white m-0">StaffBase</h1>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 m-0">{isHead ? 'Office Head' : 'Employee Portal'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Menu */}
+            <nav className="p-2 space-y-0.5 flex-1 overflow-y-auto text-xs font-medium">
+              {isHead ? (
+                [
+                  { id: 'dashboard', label: 'Dashboard', icon: <Icons.Dashboard />, badge: null },
+                  { id: 'work_reports', label: 'Daily Work Logs', icon: <Icons.Building />, badge: `${workReports.length} logs`, badgeColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' },
+                  { id: 'employees', label: 'Employee Directory', icon: <Icons.Users />, badge: totalCount },
+                  { id: 'leaves', label: 'Leave Approvals', icon: <Icons.Calendar />, badge: pendingLeaveCount || null, badgeColor: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200' },
+                  { id: 'attendance', label: 'Attendance Logs', icon: <Icons.Clock />, badge: null },
+                  { id: 'departments', label: 'Departments', icon: <Icons.Building />, badge: DEPARTMENTS.length },
+                  { id: 'payroll', label: 'Payroll Ledger', icon: <Icons.Dollar />, badge: null }
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors cursor-pointer ${
+                      activeTab === item.id
+                        ? 'bg-slate-900 text-white dark:bg-slate-800 dark:text-white font-semibold'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span>{item.icon}</span>
+                      <span>{item.label}</span>
+                    </div>
+                    {item.badge && (
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${item.badgeColor || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                ))
+              ) : (
+                (() => {
+                  const myFeedbackCount = workReports.filter(r => (r.employeeId === currentUser.employeeId || r.employeeName === currentUser.name) && r.managerReview?.status === 'Reviewed').length;
+                  return [
+                    { id: 'emp_profile', label: 'My Profile', icon: <Icons.Users /> },
+                    { id: 'emp_work', label: 'My Daily Work Logs', icon: <Icons.Clock />, badge: myFeedbackCount > 0 ? `${myFeedbackCount} Feedback` : 'Twice Daily', badgeColor: myFeedbackCount > 0 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' },
+                    { id: 'emp_leaves', label: 'My Leaves', icon: <Icons.Calendar /> },
+                    { id: 'emp_attendance', label: 'My Attendance Punch', icon: <Icons.Clock /> },
+                    { id: 'emp_payslip', label: 'My Salary Slip', icon: <Icons.Dollar /> },
+                    { id: 'emp_team', label: 'Department Team', icon: <Icons.Building /> }
+                  ];
+                })().map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors cursor-pointer ${
+                      activeTab === item.id
+                        ? 'bg-slate-900 text-white dark:bg-slate-800 dark:text-white font-semibold'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span>{item.icon}</span>
+                      <span>{item.label}</span>
+                    </div>
+                    {item.badge && (
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${item.badgeColor || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                ))
+              )}
+            </nav>
+
+            {/* Profile Footer */}
+            <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="overflow-hidden">
+                  <p className="text-xs font-semibold text-slate-900 dark:text-white truncate m-0">{currentUser.name}</p>
+                  <p className="text-[10px] text-slate-400 truncate m-0">{currentUser.roleName}</p>
+                </div>
+                <button onClick={() => setDarkMode(!darkMode)} title="Theme" className="p-1 rounded text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                  {darkMode ? <Icons.Sun /> : <Icons.Moon />}
+                </button>
+              </div>
+
+              <button
+                onClick={handleLogout}
+                className="w-full py-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded border border-red-200 dark:border-red-900/40 flex items-center justify-center gap-1.5 cursor-pointer font-medium"
+              >
+                <Icons.Logout />
+                <span>Log Out</span>
+              </button>
+            </div>
+          </aside>
+
+          {/* ==================== MAIN PAGE VIEWPORT ==================== */}
+          <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+            
+            {/* Topbar */}
+            <header className="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 flex items-center justify-between sticky top-0 z-20">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700">
+                  {isHead ? 'OFFICE HEAD (ADMIN)' : 'EMPLOYEE PORTAL'}
+                </span>
+                <span className="text-xs text-slate-400 hidden sm:inline">•</span>
+                <span className="text-xs text-slate-600 dark:text-slate-400 hidden sm:inline">{currentUser.email}</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowWorkModal(true)}
+                  className="px-3 py-1.5 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-semibold rounded-md flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Icons.Plus />
+                  <span>Upload Work Report</span>
+                </button>
+                {isHead ? (
+                  <button
+                    onClick={() => { setEditingEmp(null); setShowEmpModal(true); }}
+                    className="px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 text-xs font-medium rounded-md flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Icons.Plus />
+                    <span>Onboard Employee</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowLeaveModal(true)}
+                    className="px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 text-xs font-medium rounded-md flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Icons.Plus />
+                    <span>Apply Leave</span>
+                  </button>
+                )}
+              </div>
+            </header>
+
+            {/* Main Content Body */}
+            <main className="flex-1 overflow-y-auto p-6 space-y-6">
+
+              {/* ==================== 1. DASHBOARD ==================== */}
+              {isHead && activeTab === 'dashboard' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white m-0">Executive Dashboard</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 m-0 mt-0.5">Real-time organizational headcount, attendance status, and pending approvals.</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+                      <p className="text-xs text-slate-500 m-0">Total Staff</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white m-0 mt-1">{totalCount}</p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+                      <p className="text-xs text-slate-500 m-0">Active Working</p>
+                      <p className="text-2xl font-bold text-emerald-600 m-0 mt-1">{activeCount}</p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+                      <p className="text-xs text-slate-500 m-0">On Leave</p>
+                      <p className="text-2xl font-bold text-blue-600 m-0 mt-1">{onLeaveCount}</p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+                      <p className="text-xs text-slate-500 m-0">Pending Approvals</p>
+                      <p className="text-2xl font-bold text-amber-600 m-0 mt-1">{pendingLeaveCount}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 space-y-3">
+                      <h3 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider border-b pb-2 m-0 border-slate-100 dark:border-slate-800">
+                        Department Staffing Breakdown
+                      </h3>
+                      <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                        {DEPARTMENTS.map(d => {
+                          const count = employees.filter(e => e.departmentId === d.id).length;
+                          return (
+                            <div key={d.id} className="py-2 flex justify-between items-center">
+                              <span className="font-medium text-slate-800 dark:text-slate-200">{d.name} ({d.code})</span>
+                              <button
+                                onClick={() => { setFilterDept(d.id); setActiveTab('employees'); }}
+                                className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded font-semibold cursor-pointer"
+                              >
+                                {count} Employees →
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 space-y-3 text-xs">
+                      <h3 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider border-b pb-2 m-0 border-slate-100 dark:border-slate-800">
+                        Compensation Summary
+                      </h3>
+                      <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded border border-slate-200 dark:border-slate-700">
+                        <p className="text-slate-500 m-0">Monthly Gross Payroll:</p>
+                        <p className="text-lg font-bold text-slate-900 dark:text-white m-0 mt-0.5">{formatCurrency(totalMonthlyPayroll)}</p>
+                      </div>
+                      <div className="space-y-1 text-slate-600 dark:text-slate-400">
+                        <div className="flex justify-between"><span>Active Headcount:</span> <span className="font-medium text-slate-900 dark:text-white">{totalCount} Employees</span></div>
+                        <div className="flex justify-between"><span>Average Salary:</span> <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(Math.round(employees.reduce((a, b) => a + (b.salary || 0), 0) / (totalCount || 1)))}</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ==================== 2. REAL-TIME EMPLOYEE DIRECTORY & MULTI-FILTERS ==================== */}
+              {isHead && activeTab === 'employees' && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-base font-semibold text-slate-900 dark:text-white m-0">
+                        Employee Directory ({filteredEmployees.length} Results)
+                      </h2>
+                      <p className="text-xs text-slate-500 m-0">Real-time filtering across departments, statuses, types, and locations.</p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button onClick={handleExportCSV} className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium rounded-md cursor-pointer flex items-center gap-1.5">
+                        <Icons.Download /> <span>Export CSV</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* REAL-TIME FILTER TOOLBAR */}
+                  <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
+                    {/* 1. Live Search Input */}
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400">
+                        <Icons.Search />
+                      </span>
+                      <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search name, ID, role..."
+                        className="w-full pl-8 pr-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-slate-900 dark:text-white outline-none"
+                      />
+                    </div>
+
+                    {/* 2. Department Dropdown Filter */}
+                    <select
+                      value={filterDept}
+                      onChange={(e) => setFilterDept(e.target.value)}
+                      className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-slate-900 dark:text-white outline-none cursor-pointer"
+                    >
+                      <option value="ALL">All Departments</option>
+                      {DEPARTMENTS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+
+                    {/* 3. Status Dropdown Filter */}
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-slate-900 dark:text-white outline-none cursor-pointer"
+                    >
+                      <option value="ALL">All Statuses</option>
+                      <option value="Active">Active</option>
+                      <option value="Probation">Probation</option>
+                      <option value="On Leave">On Leave</option>
+                    </select>
+
+                    {/* 4. Employment Type Dropdown Filter */}
+                    <select
+                      value={filterType}
+                      onChange={(e) => setFilterType(e.target.value)}
+                      className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-slate-900 dark:text-white outline-none cursor-pointer"
+                    >
+                      <option value="ALL">All Employment Types</option>
+                      <option value="Full-time">Full-time</option>
+                      <option value="Contract">Contract</option>
+                      <option value="Intern">Intern</option>
+                    </select>
+
+                    {/* 5. Work Location Dropdown Filter */}
+                    <select
+                      value={filterLocation}
+                      onChange={(e) => setFilterLocation(e.target.value)}
+                      className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-slate-900 dark:text-white outline-none cursor-pointer"
+                    >
+                      {LOCATIONS.map(loc => (
+                        <option key={loc} value={loc === 'All Locations' ? 'ALL' : loc}>{loc}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Active Filter Chips / Reset */}
+                  {(search || filterDept !== 'ALL' || filterStatus !== 'ALL' || filterType !== 'ALL' || filterLocation !== 'ALL') && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-slate-400">Active Filters:</span>
+                      {filterDept !== 'ALL' && <span className="bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px]">Dept: {DEPARTMENTS.find(d => d.id === filterDept)?.name}</span>}
+                      {filterStatus !== 'ALL' && <span className="bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px]">Status: {filterStatus}</span>}
+                      {filterType !== 'ALL' && <span className="bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px]">Type: {filterType}</span>}
+                      {filterLocation !== 'ALL' && <span className="bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px]">Location: {filterLocation}</span>}
+                      <button
+                        onClick={() => { setSearch(''); setFilterDept('ALL'); setFilterStatus('ALL'); setFilterType('ALL'); setFilterLocation('ALL'); }}
+                        className="text-red-600 dark:text-red-400 hover:underline font-semibold ml-2 cursor-pointer"
+                      >
+                        Clear All Filters ✕
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Table */}
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-500 font-medium">
+                        <tr>
+                          <th className="py-2.5 px-4">Employee ID</th>
+                          <th className="py-2.5 px-4">Name</th>
+                          <th className="py-2.5 px-4">Department & Role</th>
+                          <th className="py-2.5 px-4">Location</th>
+                          <th className="py-2.5 px-4">Type</th>
+                          <th className="py-2.5 px-4">Annual CTC</th>
+                          <th className="py-2.5 px-4">Status</th>
+                          <th className="py-2.5 px-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {filteredEmployees.length === 0 ? (
+                          <tr>
+                            <td colSpan="8" className="py-8 text-center text-slate-400">
+                              No employees found matching the selected filter criteria.
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredEmployees.map(emp => (
+                            <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                              <td className="py-2.5 px-4 font-mono text-slate-400">{emp.employeeId}</td>
+                              <td className="py-2.5 px-4 font-medium text-slate-900 dark:text-white">
+                                <button onClick={() => setViewingEmp(emp)} className="hover:underline text-left cursor-pointer">
+                                  {emp.firstName} {emp.lastName}
+                                </button>
+                              </td>
+                              <td className="py-2.5 px-4">
+                                <div>{emp.designation}</div>
+                                <div className="text-slate-400 text-[11px]">{DEPARTMENTS.find(d => d.id === emp.departmentId)?.name}</div>
+                              </td>
+                              <td className="py-2.5 px-4 text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                                <Icons.MapPin />
+                                <span>{emp.location}</span>
+                              </td>
+                              <td className="py-2.5 px-4 text-slate-600 dark:text-slate-400">{emp.employmentType}</td>
+                              <td className="py-2.5 px-4 font-semibold text-slate-900 dark:text-white">{formatCurrency(emp.salary)}</td>
+                              <td className="py-2.5 px-4">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${
+                                  emp.status === 'Active'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300'
+                                    : emp.status === 'Probation'
+                                    ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300'
+                                    : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300'
+                                }`}>
+                                  {emp.status}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-4 text-right space-x-2">
+                                <button onClick={() => setViewingEmp(emp)} className="text-slate-600 dark:text-slate-400 hover:underline cursor-pointer">View</button>
+                                <button onClick={() => { setEditingEmp(emp); setShowEmpModal(true); }} className="text-slate-600 dark:text-slate-400 hover:underline cursor-pointer">Edit</button>
+                                <button onClick={() => handleDeleteEmployee(emp.id, `${emp.firstName} ${emp.lastName}`)} className="text-red-600 hover:underline cursor-pointer">Delete</button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* 3. Leaves Tab */}
+              {isHead && activeTab === 'leaves' && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-base font-semibold text-slate-900 dark:text-white m-0">Leave Approvals & Queue</h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 m-0">Action pending employee time-off requests. Approved & rejected items are moved to history.</p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-xs font-medium">
+                      {['Pending', 'Approved', 'Rejected', 'All'].map(tab => {
+                        const tabCount = tab === 'All' ? leaves.length : leaves.filter(l => l.status.toLowerCase() === tab.toLowerCase()).length;
+                        return (
+                          <button
+                            key={tab}
+                            onClick={() => setLeaveTabFilter(tab)}
+                            className={`px-3 py-1 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+                              leaveTabFilter === tab
+                                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-xs'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            }`}
+                          >
+                            <span>{tab}</span>
+                            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                              leaveTabFilter === tab ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                            }`}>
+                              {tabCount}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const leavesToShow = leaves.filter(l => leaveTabFilter === 'All' ? true : l.status.toLowerCase() === leaveTabFilter.toLowerCase());
+
+                    if (leavesToShow.length === 0) {
+                      return (
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-8 text-center text-slate-400">
+                          <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-2 text-base">
+                            ✓
+                          </div>
+                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 m-0">
+                            {leaveTabFilter === 'Pending' ? 'No pending leave requests!' : `No ${leaveTabFilter.toLowerCase()} leave records found.`}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            {leaveTabFilter === 'Pending' ? 'All submitted employee leaves have been processed and resolved.' : 'Records will appear here as requests are processed.'}
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-500 font-medium">
+                            <tr>
+                              <th className="py-2.5 px-4">Employee</th>
+                              <th className="py-2.5 px-4">Category</th>
+                              <th className="py-2.5 px-4">Dates</th>
+                              <th className="py-2.5 px-4">Reason</th>
+                              <th className="py-2.5 px-4">Status</th>
+                              <th className="py-2.5 px-4 text-right">Approval Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {leavesToShow.map(lv => (
+                              <tr key={lv.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                <td className="py-2.5 px-4 font-medium">{lv.employeeName} ({lv.employeeId})</td>
+                                <td className="py-2.5 px-4">{lv.leaveType}</td>
+                                <td className="py-2.5 px-4 text-slate-500">{lv.startDate} to {lv.endDate} ({lv.days}d)</td>
+                                <td className="py-2.5 px-4 text-slate-600 dark:text-slate-400">{lv.reason}</td>
+                                <td className="py-2.5 px-4">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                                    lv.status === 'Approved' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : lv.status === 'Pending' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
+                                  }`}>{lv.status}</span>
+                                </td>
+                                <td className="py-2.5 px-4 text-right space-x-2">
+                                  {lv.status === 'Pending' ? (
+                                    <>
+                                      <button onClick={() => handleLeaveAction(lv.id, 'Approved')} className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 rounded font-semibold cursor-pointer">Approve</button>
+                                      <button onClick={() => handleLeaveAction(lv.id, 'Rejected')} className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-300 rounded font-semibold cursor-pointer">Reject</button>
+                                    </>
+                                  ) : <span className="text-slate-400 italic">Resolved ({lv.status})</span>}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* 4. Attendance Tab */}
+              {isHead && activeTab === 'attendance' && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h2 className="text-base font-semibold text-slate-900 dark:text-white m-0">Shift Attendance Logs</h2>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Select Log Date:</label>
+                      <input
+                        type="date"
+                        value={selectedAttDate}
+                        onChange={(e) => setSelectedAttDate(e.target.value)}
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const statuses = ['Present', 'Present', 'Remote', 'Half Day', 'On Leave'];
+                    const dateRecords = attendance.filter(a => a.date === selectedAttDate);
+                    const recordsToDisplay = dateRecords.length > 0 ? dateRecords : employees.map((emp, idx) => {
+                      const hash = (emp.firstName.charCodeAt(0) + (selectedAttDate ? selectedAttDate.charCodeAt(selectedAttDate.length - 1) : 0) + idx) % statuses.length;
+                      const status = emp.status === 'On Leave' ? 'On Leave' : statuses[hash];
+                      const inTime = status === 'On Leave' ? '--' : `09:${String(15 + (idx % 30)).padStart(2, '0')} AM`;
+                      const outTime = status === 'On Leave' ? '--' : (status === 'Half Day' ? '02:00 PM' : '06:30 PM');
+                      const hours = status === 'Present' ? 8.5 : status === 'Remote' ? 8.0 : status === 'Half Day' ? 4.5 : 0;
+                      return {
+                        id: `att_${selectedAttDate}_${emp.id}`,
+                        employeeId: emp.employeeId,
+                        name: `${emp.firstName} ${emp.lastName}`,
+                        date: selectedAttDate,
+                        status,
+                        inTime,
+                        outTime,
+                        hours,
+                        mode: status === 'Remote' ? 'WFH' : 'Office'
+                      };
+                    });
+
+                    return (
+                      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-500 font-medium">
+                            <tr>
+                              <th className="py-2.5 px-4">Employee</th>
+                              <th className="py-2.5 px-4">Status</th>
+                              <th className="py-2.5 px-4">Check-In</th>
+                              <th className="py-2.5 px-4">Check-Out</th>
+                              <th className="py-2.5 px-4">Duration</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {recordsToDisplay.map(att => (
+                              <tr key={att.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                <td className="py-2.5 px-4 font-medium">{att.name} ({att.employeeId})</td>
+                                <td className="py-2.5 px-4">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                    att.status === 'Present' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                                    att.status === 'Remote' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                                    att.status === 'Half Day' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                                    'bg-slate-100 text-slate-700'
+                                  }`}>
+                                    {att.status}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-4 font-mono">{att.inTime}</td>
+                                <td className="py-2.5 px-4 font-mono">{att.outTime}</td>
+                                <td className="py-2.5 px-4 font-medium">{att.hours ? `${att.hours} hrs` : '--'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* 4.5 Work Submissions Tab (Twice Daily) */}
+              {isHead && activeTab === 'work_reports' && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-base font-semibold text-slate-900 dark:text-white m-0">Employee Daily Work Submissions</h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 m-0">Review morning (1st half) and afternoon (2nd half) task reports submitted by team members.</p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-xs font-medium">
+                        {[
+                          { key: 'ALL', label: 'All Slots' },
+                          { key: 'MORNING_TO_AFTERNOON', label: '☀️ Morning (1st Half)' },
+                          { key: 'AFTERNOON_TO_EOD', label: '🌙 Afternoon (2nd Half)' }
+                        ].map(tab => (
+                          <button
+                            key={tab.key}
+                            onClick={() => setWorkSlotFilter(tab.key)}
+                            className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${
+                              workSlotFilter === tab.key
+                                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-xs'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            }`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <input
+                        type="date"
+                        value={workDateFilter}
+                        onChange={(e) => setWorkDateFilter(e.target.value)}
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const filteredReports = workReports.filter(r => {
+                      const matchDate = !workDateFilter || r.date === workDateFilter;
+                      const matchSlot = workSlotFilter === 'ALL' || r.slot === workSlotFilter;
+                      return matchDate && matchSlot;
+                    });
+
+                    if (filteredReports.length === 0) {
+                      return (
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-8 text-center text-slate-400">
+                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 m-0">No work reports logged for this date and slot.</p>
+                          <p className="text-xs text-slate-400 mt-1">Employees will upload their morning and afternoon progress logs here.</p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {filteredReports.map(report => (
+                          <div key={report.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm space-y-3 text-xs">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <h4 className="font-bold text-sm text-slate-900 dark:text-white m-0">{report.employeeName}</h4>
+                                <p className="text-[11px] text-slate-400 m-0">{report.designation || 'Staff'} • <span className="font-mono">{report.employeeId}</span></p>
+                              </div>
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
+                                {report.slot === 'MORNING_TO_AFTERNOON' ? '☀️ Morning Log' : '🌙 Afternoon Log'}
+                              </span>
+                            </div>
+
+                            <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-100 dark:border-slate-800 space-y-1">
+                              <p className="font-bold text-slate-900 dark:text-white m-0">{report.taskTitle}</p>
+                              <p className="text-slate-600 dark:text-slate-300 m-0 leading-relaxed">{report.taskDescription}</p>
+                            </div>
+
+                            {report.deliverables && (
+                              <p className="m-0 text-slate-600 dark:text-slate-400">
+                                <strong>Deliverables:</strong> {report.deliverables}
+                              </p>
+                            )}
+
+                            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
+                              <span className="text-slate-400 font-mono">⏱ {report.timeWindow} • {report.hoursSpent}h logged</span>
+                              {report.managerReview?.status === 'Reviewed' ? (
+                                <span className="text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded">
+                                  ✓ Reviewed by Head
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => setReviewingWorkReport(report)}
+                                  className="px-2.5 py-1 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold rounded cursor-pointer"
+                                >
+                                  Review & Feedback
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* 5. Departments Tab */}
+              {isHead && activeTab === 'departments' && (
+                <div className="space-y-4">
+                  <h2 className="text-base font-semibold text-slate-900 dark:text-white m-0">Departments</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {DEPARTMENTS.map(d => (
+                      <div key={d.id} className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg space-y-1 text-xs">
+                        <h3 className="font-bold text-sm text-slate-900 dark:text-white m-0">{d.name} ({d.code})</h3>
+                        <p className="text-slate-500 m-0">Head: {d.head}</p>
+                        <p className="text-slate-500 m-0">Location: {d.location}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 6. Payroll Tab */}
+              {isHead && activeTab === 'payroll' && (
+                <div className="space-y-4">
+                  <h2 className="text-base font-semibold text-slate-900 dark:text-white m-0">Payroll Ledger - August 2026</h2>
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-500 font-medium">
+                        <tr>
+                          <th className="py-2.5 px-4">Employee</th>
+                          <th className="py-2.5 px-4">Annual CTC</th>
+                          <th className="py-2.5 px-4">Gross Monthly</th>
+                          <th className="py-2.5 px-4">EPF (12%)</th>
+                          <th className="py-2.5 px-4">Net Monthly</th>
+                          <th className="py-2.5 px-4 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {employees.map(emp => {
+                          const gross = Math.round((emp.salary || 0) / 12);
+                          const epf = Math.round(gross * 0.5 * 0.12);
+                          const net = gross - epf - 200;
+                          return (
+                            <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                              <td className="py-2.5 px-4 font-medium">{emp.firstName} {emp.lastName}</td>
+                              <td className="py-2.5 px-4">{formatCurrency(emp.salary)}</td>
+                              <td className="py-2.5 px-4">{formatCurrency(gross)}</td>
+                              <td className="py-2.5 px-4 text-red-600">- {formatCurrency(epf)}</td>
+                              <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-white">{formatCurrency(net)}</td>
+                              <td className="py-2.5 px-4 text-right">
+                                <button onClick={() => setViewingPayslip(emp)} className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded font-medium cursor-pointer">
+                                  View Slip
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* ==================== B. EMPLOYEE SELF-SERVICE TABS ==================== */}
+
+              {/* Employee: My Profile */}
+              {!isHead && activeTab === 'emp_profile' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white m-0">My Employee Profile</h2>
+                    <p className="text-xs text-slate-500 m-0">Personal record, department role, and salary overview.</p>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 max-w-2xl space-y-4 text-xs">
+                    <div className="flex items-center gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+                      <div className="w-12 h-12 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 flex items-center justify-center font-bold text-sm">
+                        {currentUser.name.charAt(0)}
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-slate-900 dark:text-white m-0">{currentUser.name}</h3>
+                        <p className="text-xs text-slate-500 m-0">{currentUser.roleName} • <span className="font-mono">{currentUser.employeeId}</span></p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg">
+                      <div><span className="text-slate-400">Work Email:</span> <p className="font-medium text-slate-900 dark:text-white m-0 mt-0.5">{currentUser.email}</p></div>
+                      <div><span className="text-slate-400">Department:</span> <p className="font-medium text-slate-900 dark:text-white m-0 mt-0.5">{DEPARTMENTS.find(d => d.id === currentUser.departmentId)?.name || 'Engineering'}</p></div>
+                      <div><span className="text-slate-400">Work Location:</span> <p className="font-medium text-slate-900 dark:text-white m-0 mt-0.5">{currentUser.location || 'Hyderabad'}</p></div>
+                      <div><span className="text-slate-400">Annual CTC:</span> <p className="font-bold text-slate-900 dark:text-white m-0 mt-0.5">{formatCurrency(currentUser.salary || 1400000)}</p></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Employee: My Daily Work Uploads */}
+              {!isHead && activeTab === 'emp_work' && (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-lg font-semibold text-slate-900 dark:text-white m-0">My Daily Work Submissions</h2>
+                      <p className="text-xs text-slate-500 m-0">Upload your progress report twice a day: Morning-to-Afternoon and Afternoon-to-Evening logs.</p>
+                    </div>
+                    <button
+                      onClick={() => setShowWorkModal(true)}
+                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm self-start sm:self-center"
+                    >
+                      <Icons.Plus />
+                      <span>Upload Work Session</span>
+                    </button>
+                  </div>
+
+                  {/* Shift Progress Slots Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                          <span>☀️</span>
+                          <span>First Half: Morning to Afternoon</span>
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">09:30 AM - 01:30 PM</span>
+                      </div>
+                      <p className="text-slate-500 m-0">Sprint tasks, architecture implementation, client meetings, and pull requests.</p>
+                    </div>
+
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                          <span>🌙</span>
+                          <span>Second Half: Afternoon to Evening (EOD)</span>
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">02:00 PM - 06:30 PM</span>
+                      </div>
+                      <p className="text-slate-500 m-0">Review testing, deployments, release handovers, and tomorrow's roadmap.</p>
+                    </div>
+                  </div>
+
+                  {/* Manager Feedback Received Live Banner */}
+                  {(() => {
+                    const reviewedLogs = workReports.filter(r => (r.employeeId === currentUser.employeeId || r.employeeName === currentUser.name) && r.managerReview?.status === 'Reviewed');
+                    if (reviewedLogs.length === 0) return null;
+
+                    return (
+                      <div className="bg-slate-100/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100 font-bold text-xs">
+                            <span className="text-base">📢</span>
+                            <span>Office Head Review & Feedback ({reviewedLogs.length} Received)</span>
+                          </div>
+                          <span className="text-[10px] font-mono font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+                            Active Directives
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {reviewedLogs.slice(0, 4).map(r => (
+                            <div key={r.id} className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-1.5">
+                              <div className="flex justify-between items-center text-[10px]">
+                                <span className="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[200px]">{r.taskTitle}</span>
+                                <span className="font-mono text-slate-400 shrink-0">{r.slotLabel}</span>
+                              </div>
+                              <div className="bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 font-medium leading-relaxed">
+                                <span className="font-bold text-slate-800 dark:text-slate-300 block text-[10px] uppercase mb-0.5">Head Remarks:</span>
+                                "{r.managerReview.feedback || 'Work update acknowledged and approved. Proceed to next task.'}"
+                              </div>
+                              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+                                <span>Reviewed by <strong>{r.managerReview.reviewedBy || 'Office Head'}</strong></span>
+                                <span className="text-slate-900 dark:text-white font-bold">✓ Approved</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* My Log History */}
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden text-xs">
+                    <div className="p-3 font-semibold border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
+                      My Submitted Work Updates
+                    </div>
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {workReports.filter(r => r.employeeId === currentUser.employeeId || r.employeeName === currentUser.name).length === 0 ? (
+                        <div className="p-8 text-center text-slate-400">
+                          <p className="m-0">No work updates logged yet for today.</p>
+                          <p className="m-0 mt-1 text-[11px]">Click "Upload Work Session" above to submit your first half or second half work report.</p>
+                        </div>
+                      ) : (
+                        workReports.filter(r => r.employeeId === currentUser.employeeId || r.employeeName === currentUser.name).map(report => (
+                          <div key={report.id} className="p-4 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
+                                {report.slot === 'MORNING_TO_AFTERNOON' ? '☀️ Morning to Afternoon' : '🌙 Afternoon to Evening'}
+                              </span>
+                              <span className="text-slate-400 font-mono text-[11px]">{report.date} • {report.hoursSpent} hrs logged</span>
+                            </div>
+
+                            <p className="font-bold text-slate-900 dark:text-white m-0 text-sm">{report.taskTitle}</p>
+                            <p className="text-slate-600 dark:text-slate-300 m-0 leading-relaxed">{report.taskDescription}</p>
+                            {report.deliverables && <p className="text-slate-500 m-0 text-[11px]"><strong>Deliverables:</strong> {report.deliverables}</p>}
+
+                            {report.managerReview?.status === 'Reviewed' ? (
+                              <div className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 p-2.5 rounded-lg text-emerald-800 dark:text-emerald-300 mt-2">
+                                <p className="font-bold m-0 text-[11px]">✓ Head Review ({report.managerReview.reviewedBy})</p>
+                                {report.managerReview.feedback && <p className="italic m-0 mt-0.5 text-[11px]">"{report.managerReview.feedback}"</p>}
+                              </div>
+                            ) : (
+                              <p className="text-slate-400 italic m-0 text-[11px] mt-1">⏳ Sent to Office Head • Pending Review</p>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Employee: My Leaves */}
+              {!isHead && activeTab === 'emp_leaves' && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="text-lg font-semibold text-slate-900 dark:text-white m-0">My Leave Balances</h2>
+                      <p className="text-xs text-slate-500 m-0">Time-off allocation and status of past leave requests.</p>
+                    </div>
+                    <button onClick={() => setShowLeaveModal(true)} className="px-3.5 py-1.5 bg-slate-900 text-white rounded text-xs font-medium cursor-pointer">
+                      + Apply Leave
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="p-3 bg-white dark:bg-slate-900 border rounded-lg"><p className="text-xs text-slate-400 m-0">Annual Leave</p><p className="text-lg font-bold m-0 mt-1">18 / 24d</p></div>
+                    <div className="p-3 bg-white dark:bg-slate-900 border rounded-lg"><p className="text-xs text-slate-400 m-0">Sick Leave</p><p className="text-lg font-bold m-0 mt-1">9 / 12d</p></div>
+                    <div className="p-3 bg-white dark:bg-slate-900 border rounded-lg"><p className="text-xs text-slate-400 m-0">Casual Leave</p><p className="text-lg font-bold m-0 mt-1">5 / 8d</p></div>
+                    <div className="p-3 bg-white dark:bg-slate-900 border rounded-lg"><p className="text-xs text-slate-400 m-0">Comp Off</p><p className="text-lg font-bold m-0 mt-1">3 / 5d</p></div>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-900 border rounded-lg overflow-hidden text-xs">
+                    <div className="p-3 font-semibold border-b">My Applications History</div>
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {leaves.filter(l => l.employeeName === currentUser.name || l.employeeId === currentUser.employeeId).length === 0 ? (
+                        <div className="p-6 text-center text-slate-400">No active leave requests applied.</div>
+                      ) : (
+                        leaves.filter(l => l.employeeName === currentUser.name || l.employeeId === currentUser.employeeId).map(lv => (
+                          <div key={lv.id} className="p-3 flex justify-between items-center">
+                            <div>
+                              <p className="font-semibold text-slate-900 dark:text-white m-0">{lv.leaveType} ({lv.days} days)</p>
+                              <p className="text-slate-400 m-0 mt-0.5">{lv.startDate} to {lv.endDate} • {lv.reason}</p>
+                            </div>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">{lv.status}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Employee: My Attendance */}
+              {!isHead && activeTab === 'emp_attendance' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white m-0">Daily Shift Attendance</h2>
+                    <p className="text-xs text-slate-500 m-0">Punch in your shift hours for today.</p>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-900 border rounded-xl p-6 max-w-md space-y-4 text-xs text-center">
+                    <p className="text-xs text-slate-500 m-0">Current Date: <strong>{new Date().toDateString()}</strong></p>
+                    <div className="flex gap-2 justify-center">
+                      <button onClick={() => handlePunchAction('Present')} className="px-4 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold rounded cursor-pointer">
+                        Clock In (Office)
+                      </button>
+                      <button onClick={() => handlePunchAction('Remote')} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold rounded cursor-pointer">
+                        Clock In (WFH)
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Employee: My Payslip */}
+              {!isHead && activeTab === 'emp_payslip' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white m-0">My Salary Slip - August 2026</h2>
+                    <p className="text-xs text-slate-500 m-0">Monthly earnings, statutory provident fund deductions, and take-home pay.</p>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 max-w-xl space-y-4 text-xs">
+                    <div className="flex justify-between border-b pb-3">
+                      <div>
+                        <h3 className="font-bold text-sm text-slate-900 dark:text-white m-0">StaffBase Solutions Pvt Ltd</h3>
+                        <p className="text-slate-400 m-0">Pay Period: August 2026</p>
+                      </div>
+                      <button onClick={() => window.print()} className="px-3 py-1 bg-slate-900 text-white rounded text-xs font-medium cursor-pointer">
+                        Print Payslip
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded">
+                      <p className="m-0"><span className="text-slate-400">Employee:</span> <span className="font-semibold">{currentUser.name}</span></p>
+                      <p className="m-0"><span className="text-slate-400">ID:</span> <span className="font-mono">{currentUser.employeeId}</span></p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="border p-3 rounded space-y-1">
+                        <p className="font-semibold border-b pb-1">Earnings</p>
+                        <div className="flex justify-between text-slate-500"><span>Basic (50%):</span> <span>{formatCurrency(Math.round(((currentUser.salary || 1400000) / 12) * 0.5))}</span></div>
+                        <div className="flex justify-between text-slate-500"><span>HRA (20%):</span> <span>{formatCurrency(Math.round(((currentUser.salary || 1400000) / 12) * 0.2))}</span></div>
+                        <div className="flex justify-between text-slate-500"><span>Allowances:</span> <span>{formatCurrency(Math.round(((currentUser.salary || 1400000) / 12) * 0.3))}</span></div>
+                      </div>
+
+                      <div className="border p-3 rounded space-y-1">
+                        <p className="font-semibold border-b pb-1">Deductions</p>
+                        <div className="flex justify-between text-slate-500"><span>EPF (12%):</span> <span className="text-red-600">- {formatCurrency(Math.round(((currentUser.salary || 1400000) / 12) * 0.5 * 0.12))}</span></div>
+                        <div className="flex justify-between text-slate-500"><span>Prof Tax:</span> <span className="text-red-600">- ₹200</span></div>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 font-bold rounded flex justify-between">
+                      <span>Net Salary Credited:</span>
+                      <span>{formatCurrency(Math.round((currentUser.salary || 1400000) / 12) - Math.round(((currentUser.salary || 1400000) / 12) * 0.5 * 0.12) - 200)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Employee: My Team */}
+              {!isHead && activeTab === 'emp_team' && (
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white m-0">Department Colleagues</h2>
+                    <p className="text-xs text-slate-500 m-0">Colleagues in {DEPARTMENTS.find(d => d.id === currentUser.departmentId)?.name || 'your department'}.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {employees.filter(e => e.departmentId === currentUser.departmentId).map(colleague => (
+                      <div key={colleague.id} className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs space-y-1">
+                        <p className="font-semibold text-sm text-slate-900 dark:text-white m-0">{colleague.firstName} {colleague.lastName}</p>
+                        <p className="text-slate-500 m-0">{colleague.designation}</p>
+                        <p className="text-slate-400 font-mono m-0 text-[11px]">{colleague.email}</p>
+                        <p className="text-slate-500 m-0 text-[11px]">Location: {colleague.location}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </main>
+          </div>
+
+          {/* ==================== COMMON MODALS ==================== */}
+
+          {/* Employee Add/Edit Modal */}
+          {showEmpModal && (
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 w-full max-w-lg p-5 shadow-2xl space-y-4 text-xs">
+                <div className="flex justify-between items-center border-b pb-3">
+                  <h3 className="font-bold text-slate-900 dark:text-white text-sm m-0">{editingEmp ? 'Edit Employee Details' : 'Onboard New Employee'}</h3>
+                  <button onClick={() => setShowEmpModal(false)} className="text-slate-400 text-sm cursor-pointer">✕</button>
+                </div>
+
+                <form onSubmit={handleSaveEmployee} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">First Name *</label>
+                      <input name="firstName" defaultValue={editingEmp?.firstName || ''} required className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Last Name *</label>
+                      <input name="lastName" defaultValue={editingEmp?.lastName || ''} required className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Email *</label>
+                      <input name="email" type="email" defaultValue={editingEmp?.email || ''} required className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Phone</label>
+                      <input name="phone" defaultValue={editingEmp?.phone || '+91 98765 43210'} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Department</label>
+                      <select name="departmentId" defaultValue={editingEmp?.departmentId || 'eng'} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none">
+                        {DEPARTMENTS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Work Location</label>
+                      <select name="location" defaultValue={editingEmp?.location || 'Hyderabad'} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none">
+                        <option value="Hyderabad">Hyderabad</option>
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Pune">Pune</option>
+                        <option value="Delhi NCR">Delhi NCR</option>
+                        <option value="Chennai">Chennai</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Designation *</label>
+                      <input name="designation" defaultValue={editingEmp?.designation || 'Software Engineer'} required className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Employment Type</label>
+                      <select name="employmentType" defaultValue={editingEmp?.employmentType || 'Full-time'} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none">
+                        <option value="Full-time">Full-time</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Intern">Intern</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Annual CTC (INR) *</label>
+                      <input name="salary" type="number" defaultValue={editingEmp?.salary || 1200000} required className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Status</label>
+                      <select name="status" defaultValue={editingEmp?.status || 'Active'} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none">
+                        <option value="Active">Active</option>
+                        <option value="Probation">Probation</option>
+                        <option value="On Leave">On Leave</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-3 border-t">
+                    <button type="button" onClick={() => setShowEmpModal(false)} className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded font-medium cursor-pointer">Cancel</button>
+                    <button type="submit" className="px-4 py-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded font-medium cursor-pointer">Save Employee</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Employee Detail Modal */}
+          {viewingEmp && (
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 w-full max-w-md p-5 shadow-2xl space-y-4 text-xs">
+                <div className="flex justify-between items-start border-b pb-3">
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-white m-0">{viewingEmp.firstName} {viewingEmp.lastName}</h3>
+                    <p className="text-slate-400 font-mono m-0 mt-0.5">{viewingEmp.employeeId} • {viewingEmp.designation}</p>
+                  </div>
+                  <button onClick={() => setViewingEmp(null)} className="text-slate-400 text-sm cursor-pointer">✕</button>
+                </div>
+
+                <div className="space-y-2 bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded border border-slate-200 dark:border-slate-700">
+                  <div className="flex justify-between"><span className="text-slate-400">Department:</span> <span className="font-medium text-slate-900 dark:text-white">{DEPARTMENTS.find(d => d.id === viewingEmp.departmentId)?.name}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Location:</span> <span className="font-medium text-slate-900 dark:text-white">{viewingEmp.location}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Email:</span> <span className="font-medium text-slate-900 dark:text-white">{viewingEmp.email}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Phone:</span> <span className="font-medium text-slate-900 dark:text-white">{viewingEmp.phone}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Employment Type:</span> <span className="font-medium text-slate-900 dark:text-white">{viewingEmp.employmentType}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Annual CTC:</span> <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(viewingEmp.salary)}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Status:</span> <span className="font-semibold text-slate-900 dark:text-white">{viewingEmp.status}</span></div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t">
+                  <button onClick={() => { setEditingEmp(viewingEmp); setViewingEmp(null); setShowEmpModal(true); }} className="px-3.5 py-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded font-medium cursor-pointer">Edit Profile</button>
+                  <button onClick={() => setViewingEmp(null)} className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded font-medium cursor-pointer">Close</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Leave Modal */}
+          {showLeaveModal && (
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 w-full max-w-sm p-5 shadow-2xl space-y-4 text-xs">
+                <div className="flex justify-between items-center border-b pb-3">
+                  <h3 className="font-bold text-slate-900 dark:text-white text-sm m-0">Apply For Time-Off</h3>
+                  <button onClick={() => setShowLeaveModal(false)} className="text-slate-400 text-sm cursor-pointer">✕</button>
+                </div>
+
+                <form onSubmit={handleApplyLeave} className="space-y-3">
+                  {isHead && (
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Employee *</label>
+                      <select name="employeeName" className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none">
+                        {employees.map(e => <option key={e.id} value={`${e.firstName} ${e.lastName}`}>{e.firstName} {e.lastName} ({e.employeeId})</option>)}
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Leave Category</label>
+                    <select name="leaveType" className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none">
+                      <option value="Annual Leave">Annual Leave</option>
+                      <option value="Sick Leave">Sick Leave</option>
+                      <option value="Casual Leave">Casual Leave</option>
+                      <option value="Compensatory Off">Compensatory Off</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Start Date</label>
+                      <input name="startDate" type="date" defaultValue="2026-09-05" required className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">End Date</label>
+                      <input name="endDate" type="date" defaultValue="2026-09-07" required className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Total Days</label>
+                    <input name="days" type="number" defaultValue="3" required className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none" />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Reason *</label>
+                    <textarea name="reason" required placeholder="Reason for time off..." rows="2" className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none"></textarea>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-3 border-t">
+                    <button type="button" onClick={() => setShowLeaveModal(false)} className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded font-medium cursor-pointer">Cancel</button>
+                    <button type="submit" className="px-4 py-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded font-medium cursor-pointer">Submit</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Official Payslip Modal */}
+          {viewingPayslip && (
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 w-full max-w-lg p-5 shadow-2xl space-y-4 text-xs">
+                <div className="flex justify-between items-start border-b pb-3">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white m-0">StaffBase Solutions Pvt Ltd</h3>
+                    <p className="text-slate-400 m-0">Salary Slip - August 2026</p>
+                  </div>
+                  <button onClick={() => setViewingPayslip(null)} className="text-slate-400 text-sm cursor-pointer">✕</button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded">
+                  <p className="m-0"><span className="text-slate-400">Employee:</span> <span className="font-semibold">{viewingPayslip.firstName} {viewingPayslip.lastName}</span></p>
+                  <p className="m-0"><span className="text-slate-400">ID:</span> <span className="font-mono">{viewingPayslip.employeeId}</span></p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="border p-3 rounded space-y-1">
+                    <p className="font-semibold border-b pb-1">Earnings</p>
+                    <div className="flex justify-between text-slate-500"><span>Basic (50%):</span> <span>{formatCurrency(Math.round(((viewingPayslip.salary || 0) / 12) * 0.5))}</span></div>
+                    <div className="flex justify-between text-slate-500"><span>HRA (20%):</span> <span>{formatCurrency(Math.round(((viewingPayslip.salary || 0) / 12) * 0.2))}</span></div>
+                    <div className="flex justify-between text-slate-500"><span>Allowances:</span> <span>{formatCurrency(Math.round(((viewingPayslip.salary || 0) / 12) * 0.3))}</span></div>
+                  </div>
+
+                  <div className="border p-3 rounded space-y-1">
+                    <p className="font-semibold border-b pb-1">Deductions</p>
+                    <div className="flex justify-between text-slate-500"><span>EPF (12%):</span> <span className="text-red-600">- {formatCurrency(Math.round(((viewingPayslip.salary || 0) / 12) * 0.5 * 0.12))}</span></div>
+                    <div className="flex justify-between text-slate-500"><span>Prof Tax:</span> <span className="text-red-600">- ₹200</span></div>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-slate-100 dark:bg-slate-800 font-bold rounded flex justify-between">
+                  <span>Net Salary Payable:</span>
+                  <span>{formatCurrency(Math.round((viewingPayslip.salary || 0) / 12) - Math.round(((viewingPayslip.salary || 0) / 12) * 0.5 * 0.12) - 200)}</span>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t">
+                  <button onClick={() => window.print()} className="px-3.5 py-1.5 bg-slate-900 text-white rounded font-medium cursor-pointer">Print Slip</button>
+                  <button onClick={() => setViewingPayslip(null)} className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded font-medium cursor-pointer">Close</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Daily Work Upload Modal */}
+          {showWorkModal && (
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 w-full max-w-md p-5 shadow-2xl space-y-4 text-xs">
+                <div className="flex justify-between items-center border-b pb-3">
+                  <div>
+                    <h3 className="font-bold text-slate-900 dark:text-white text-sm m-0">Upload Daily Work Progress</h3>
+                    <p className="text-[11px] text-slate-500 m-0">Log your morning or afternoon tasks to send to the Office Head.</p>
+                  </div>
+                  <button onClick={() => setShowWorkModal(false)} className="text-slate-400 text-sm cursor-pointer">✕</button>
+                </div>
+
+                <form onSubmit={handleUploadWork} className="space-y-3">
+                  {isHead && (
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Select Employee</label>
+                      <select name="employeeId" className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none">
+                        {employees.map(e => <option key={e.id} value={e.employeeId}>{e.firstName} {e.lastName} ({e.employeeId})</option>)}
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Shift Progress Slot *</label>
+                    <select name="slot" className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none">
+                      <option value="MORNING_TO_AFTERNOON">☀️ Morning to Afternoon (First Half: 09:30 AM - 01:30 PM)</option>
+                      <option value="AFTERNOON_TO_EOD">🌙 Afternoon to Evening / EOD (Second Half: 02:00 PM - 06:30 PM)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Task / Feature Title *</label>
+                    <input name="taskTitle" required placeholder="e.g. Core sprint backend integration & test run" className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none" />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Detailed Description of Work Done *</label>
+                    <textarea name="taskDescription" required rows="3" placeholder="Describe the modules worked on, commits, meetings, bug fixes..." className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none"></textarea>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Deliverables / PR #</label>
+                      <input name="deliverables" placeholder="e.g. PR #415 merged" className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Hours Logged</label>
+                      <input name="hoursSpent" type="number" step="0.5" defaultValue="4.0" className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Blockers / Escalations (Optional)</label>
+                    <input name="blockers" placeholder="Enter 'None' or describe blocker" defaultValue="None" className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none" />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-3 border-t">
+                    <button type="button" onClick={() => setShowWorkModal(false)} className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded font-medium cursor-pointer">Cancel</button>
+                    <button type="submit" className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-medium cursor-pointer">Submit to Head</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Work Review Modal */}
+          {reviewingWorkReport && (
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 w-full max-w-md p-5 shadow-2xl space-y-4 text-xs">
+                <div className="flex justify-between items-center border-b pb-3">
+                  <h3 className="font-bold text-slate-900 dark:text-white text-sm m-0">Review Work Update</h3>
+                  <button onClick={() => setReviewingWorkReport(null)} className="text-slate-400 text-sm cursor-pointer">✕</button>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded space-y-1">
+                  <p className="font-bold text-slate-900 dark:text-white m-0">{reviewingWorkReport.employeeName} ({reviewingWorkReport.slotLabel})</p>
+                  <p className="text-slate-600 dark:text-slate-300 m-0 font-medium">{reviewingWorkReport.taskTitle}</p>
+                  <p className="text-slate-500 dark:text-slate-400 m-0">{reviewingWorkReport.taskDescription}</p>
+                </div>
+
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const fd = new FormData(e.target);
+                  handleReviewWork(reviewingWorkReport.id, fd.get('feedback'));
+                }} className="space-y-3">
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Office Head Feedback / Remarks</label>
+                    <textarea name="feedback" rows="3" placeholder="Enter remarks, approval note, or next steps..." className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded text-slate-900 dark:text-white outline-none"></textarea>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2 border-t">
+                    <button type="button" onClick={() => setReviewingWorkReport(null)} className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded font-medium cursor-pointer">Cancel</button>
+                    <button type="submit" className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-medium cursor-pointer">Mark Reviewed</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
